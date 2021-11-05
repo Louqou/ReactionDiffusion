@@ -1,0 +1,67 @@
+﻿// Each #kernel tells which function to compile; you can have many kernels
+#pragma kernel CSMain
+
+RWTexture2D<float4> rDCells;
+RWTexture2D<float4> rDCellsTemp;
+
+float width;
+float height;
+
+float dA = 1;
+float dB = 0.5;
+float f = 0.055;
+float k = 0.062;
+
+// Create a RenderTexture with enableRandomWrite flag and set it
+// with cs.SetTexture
+RWTexture2D<float4> Result;
+
+float LaplaceA(int w, int h)
+{
+    float sum = 0;
+
+    sum += rDCellsTemp[int2(w, h)].x * -1;
+
+    sum += rDCellsTemp[int2(w + 1, h)].x * 0.2;
+    sum += rDCellsTemp[int2(w, h + 1)].x * 0.2;
+    sum += rDCellsTemp[int2(w - 1, h)].x * 0.2;
+    sum += rDCellsTemp[int2(w, h - 1)].x * 0.2;
+
+    sum += rDCellsTemp[int2(w + 1, h + 1)].x * 0.05;
+    sum += rDCellsTemp[int2(w - 1, h + 1)].x * 0.05;
+    sum += rDCellsTemp[int2(w + 1, h - 1)].x * 0.05;
+    sum += rDCellsTemp[int2(w - 1, h - 1)].x * 0.05;
+
+    return sum;
+}
+
+float LaplaceB(int w, int h)
+{
+    float sum = 0;
+
+    sum += rDCellsTemp[int2(w, h)].y * -1;
+
+    sum += rDCellsTemp[int2(w + 1, h)].y * 0.2;
+    sum += rDCellsTemp[int2(w, h + 1)].y * 0.2;
+    sum += rDCellsTemp[int2(w - 1, h)].y * 0.2;
+    sum += rDCellsTemp[int2(w, h - 1)].y * 0.2;
+
+    sum += rDCellsTemp[int2(w + 1, h + 1)].y * 0.05;
+    sum += rDCellsTemp[int2(w - 1, h + 1)].y * 0.05;
+    sum += rDCellsTemp[int2(w + 1, h - 1)].y * 0.05;
+    sum += rDCellsTemp[int2(w - 1, h - 1)].y * 0.05;
+
+    return sum;
+}
+
+[numthreads(8,8,1)]
+void CSMain (uint3 id : SV_DispatchThreadID)
+{
+    float a = rDCellsTemp[id.xy].x;
+    float b = rDCellsTemp[id.xy].y;
+
+    rDCells[id.xy] = float4(a + (dA * LaplaceA(id.x, id.y) - (a * b * b) + (f * (1 - a))), 
+                            b + (dB * LaplaceB(id.x, id.y) + (a * b * b) - ((k + f) * b)), 0, 0);
+
+    Result[id.xy] = lerp(float4(0,0,0,1), float4(1,1,1,1), rDCells[id.xy].y * 3);
+}
