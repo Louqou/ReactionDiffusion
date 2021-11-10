@@ -218,8 +218,8 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   computeRD: {fileID: 7200000, guid: 6ee46ef7df4bbdf47904afd8ab7ced3f, type: 3}
-  width: 1920
-  height: 1080
+  width: 500
+  height: 281
   dA: 1
   dB: 0.5
   f: 0.055
